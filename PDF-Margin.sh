@@ -17,20 +17,16 @@ fi
 # Extract the base name of the input file (without the extension)
 inputname=$(basename "$input_pdf" .pdf)
 
-# Step 1: Create temp_a4.pdf
-gs -o temp_a4.pdf -sDEVICE=pdfwrite -sPAPERSIZE=a4 -dPDFFitPage -f "$input_pdf"
+# Check if the output PDF file already exists
+if [ -f "${inputname}-wide.pdf" ]; then
+    echo "Error: The output PDF file '${inputname}-wide.pdf' already exists."
+    exit 1
+fi
 
-# Wait for temp_a4.pdf to be created
-while [ ! -f temp_a4.pdf ]; do
-    sleep 1
-done
-
-# Create output.pdf with increased width and content translated 20mm to the left
-gs -o "${inputname}-wide.pdf" -sDEVICE=pdfwrite -dDEVICEWIDTHPOINTS=595 -dDEVICEHEIGHTPOINTS=1100 -dFIXEDMEDIA -dPDFFitPage -c "<</Install {0 0 translate 0 -140 translate}>> setpagedevice" -f temp_a4.pdf
-
-
-# Cleanup temp_a4.pdf
-rm temp_a4.pdf
+# Use pdfjam to resize and translate the content of the PDF
+pdfjam --outfile "${inputname}-wide.pdf" --papersize '{367mm,210mm}' --scale '0.95' --offset '-40mm 0' "$input_pdf"
 
 echo "Output PDF: ${inputname}-wide.pdf"
+
+
 
